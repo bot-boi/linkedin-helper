@@ -9,7 +9,7 @@ driver = None
 
 def is_logged_in():
     try:
-        driver.find_element_by_id("profile-nav-item") # profile navigation button in menu bar   
+        driver.find_element_by_id("profile-nav-item") # profile navigation button in menu bar
         return True
     except NoSuchElementException:
         return False
@@ -47,20 +47,36 @@ def open_sales_nav():
 def open_sales_search():
     driver.get("https://www.linkedin.com/sales/search/people?viewAllFilters=true")
 
-def get_links(): # gets a list of links to sales nav profiles
+def get_links_on_page(): # gets a list of links to sales nav profiles on a given page
     elems = []
     for n in range(2):
        elems += driver.find_elements_by_xpath("//*[@href]")
        scroll_once()
-       time.sleep(2)
+       time.sleep(3)
 
     links = [elem.get_attribute("href") for elem in elems] # convert elems to string
     links = [link for link in links if "/sales/people" in link] # filter links to profiles
     links = set(links) # remove any duplicates
     return links
 
+def next_page(): # goto next page in sales nav search
+    btn =  driver.find_element_by_xpath("//button[@class='search-results__pagination-next-button']");
+    if btn.is_enabled():
+        btn.click()
+        time.sleep(3)
+        return True
+    else:
+        return False
+
+def get_all_links(links): # gets all links in a sales nav search (recursive! wow cool!)
+    links += get_links_on_page()
+    if next_page():
+        get_all_links(links)
+
 def init():
     global driver
     driver = webdriver.Chrome()
     login(user1.email, user1.pw)
     open_sales_search()
+
+init()
