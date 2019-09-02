@@ -2,6 +2,8 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException
 import time
+from pynput.keyboard import Key, Controller
+# import pdfkit # https://wkhtmltopdf.org/downloads.html for windows installer, sudo apt install wkhtmltopdf for linux
 
 from constants import user1
 
@@ -72,6 +74,55 @@ def get_all_links(links): # gets all links in a sales nav search (recursive! wow
     links += get_links_on_page()
     if next_page():
         get_all_links(links)
+
+def nav_to_linkedin(profile_url): # opens nav profile and jumps to regular linkedin profile, returns linkedin profile URL
+    driver.get(profile_url)     # TODO: modify tags on sales nav profile
+    dropdown_menu = driver.find_element_by_xpath("//artdeco-dropdown-trigger[@role='button' and @class='button-round-tertiary-medium-muted block ml1 ember-view']")
+    dropdown_menu.click()
+    time.sleep(1) # this shouldnt be a static wait
+    open_linkedin = driver.find_element_by_xpath("//artdeco-dropdown-item[@data-control-name='view_linkedin']")
+    open_linkedin.click()
+    driver.close() # close the sales nav tab
+    driver.switch_to_window(driver.window_handles[0]) # switch to the tab that just opened, not sure if done auto cus only tab left
+    return driver.current_url
+
+def navs_to_linkedins(links): # convert a bunch of nav profile links to linkedin profile links
+    return [nav_to_linkedin(link) for link in links]
+
+# print using chrome print dialogue
+# window must be focused for this to work
+# assumes you are using print to pdf
+def print_dialog(waitManualFocus = False):
+    # def focus_chrome_win
+    # def focus_chrome_linux
+    def expand_seemore_tags(): # TODO: finish dis. click on all the see more buttons so we get all the bs ppl have written
+        elems = driver.find_elements_by_xpath("//a[@href='#' and @class='lt-line-clamp__more']")
+
+    if waitManualFocus:
+        print("you've got 5 seconds to focus chrome ok homie?")
+        time.sleep(5)
+
+    keyboard = Controller()
+    keyboard.press(Key.ctrl_l)
+    keyboard.press('p')
+    keyboard.release(Key.ctrl_l)
+    keyboard.release('p')
+    time.sleep(2) # wait for dialogue to open
+    keyboard.press(Key.enter)
+    keyboard.release(Key.enter)
+    time.sleep(5) # wait for download dialogue to open
+    keyboard.press(Key.enter)
+    keyboard.release(Key.enter)
+    time.sleep(2)
+
+def print_profiles(links):
+    waitManualFocus = True
+    for link in links:
+        if not driver.current_url == link:
+            driver.get(link)
+        print_dialog(waitManualFocus)
+        if waitManualFocus: # first print needs manual focus until i automate it
+            waitManualFocus = False
 
 def init():
     global driver
