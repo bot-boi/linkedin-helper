@@ -58,7 +58,7 @@ def get_links_on_page(): # gets a list of links to sales nav profiles on a given
 
     links = [elem.get_attribute("href") for elem in elems] # convert elems to string
     links = [link for link in links if "/sales/people" in link] # filter links to profiles
-    links = set(links) # remove any duplicates
+    links = list(set(links)) # remove any duplicates
     return links
 
 def next_page(): # goto next page in sales nav search
@@ -89,19 +89,48 @@ def nav_to_linkedin(profile_url): # opens nav profile and jumps to regular linke
 def navs_to_linkedins(links): # convert a bunch of nav profile links to linkedin profile links
     return [nav_to_linkedin(link) for link in links]
 
+def scroll_to_element(elem):
+    # scroll so elem is at center of viewport
+    driver.execute_script('return arguments[0].scrollIntoView({block: "center"});', elem)
+
+def hide_element(elem):
+    driver.execute_script("arguments[0].style.visibility='hidden'", elem)
+
+def hide_linkedin_search_bar():
+    # hide the linkedin search bar
+    searchbar = driver.find_element_by_xpath("//header[@id='extended-nav']")
+    hide_element(searchbar)
+    # hide the bar that shows when you're scrolled down page a bit
+    otherbar = driver.find_element_by_xpath("//div[@class='pv-profile-sticky-header pv-profile-sticky-header--is-showing pv-profile-sticky-header--hidden ember-view']")
+    hide_element(otherbar)
+
+def expand_seemore_tags(): # expand all "see more" elements
+    scroll_to_bottom() # force page to load
+    elems = driver.find_elements_by_xpath("//a[@href='#' and @class='lt-line-clamp__more']")
+    print(len(elems))
+    for elem in elems:
+        if elem.is_displayed() and elem.is_enabled():
+            scroll_to_element(elem)
+            time.sleep(1)
+            elem.click()
+
+def focus_window(): # works on linux, not sure abt windows yet
+    driver.switch_to_window(driver.current_window_handle)
+
 # print using chrome print dialogue
 # window must be focused for this to work
 # assumes you are using print to pdf
 def print_dialog(waitManualFocus = False):
     # def focus_chrome_win
     # def focus_chrome_linux
-    def expand_seemore_tags(): # TODO: finish dis. click on all the see more buttons so we get all the bs ppl have written
-        elems = driver.find_elements_by_xpath("//a[@href='#' and @class='lt-line-clamp__more']")
 
-    if waitManualFocus:
-        print("you've got 5 seconds to focus chrome ok homie?")
-        time.sleep(5)
+    #if waitManualFocus:
+        #print("you've got 5 seconds to focus chrome ok homie?")
+        #time.sleep(5)
 
+    focus_window()
+    expand_seemore_tags()
+    hide_linkedin_search_bar()
     keyboard = Controller()
     keyboard.press(Key.ctrl_l)
     keyboard.press('p')
@@ -114,6 +143,7 @@ def print_dialog(waitManualFocus = False):
     keyboard.press(Key.enter)
     keyboard.release(Key.enter)
     time.sleep(2)
+
 
 def print_profiles(links):
     waitManualFocus = True
