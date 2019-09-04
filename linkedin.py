@@ -3,13 +3,12 @@ from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import NoSuchElementException
 import time
 from pynput.keyboard import Key, Controller
-# import pdfkit # https://wkhtmltopdf.org/downloads.html for windows installer, sudo apt install wkhtmltopdf for linux
 
 from constants import user1
 
 driver = None
 
-def is_logged_in():
+def is_logged_in(): # test if logged into linkedin account
     try:
         driver.find_element_by_id("profile-nav-item") # profile navigation button in menu bar
         return True
@@ -49,23 +48,23 @@ def open_sales_nav():
 def open_sales_search():
     driver.get("https://www.linkedin.com/sales/search/people?viewAllFilters=true")
 
-def get_links_on_page(): # gets a list of links to sales nav profiles on a given page
+def get_links_on_page(wait_load = 1): # gets a list of links to sales nav profiles on a given page
     elems = []
     for n in range(2):
        elems += driver.find_elements_by_xpath("//*[@href]")
        scroll_once()
-       time.sleep(3)
+       time.sleep(wait_load)
 
     links = [elem.get_attribute("href") for elem in elems] # convert elems to string
     links = [link for link in links if "/sales/people" in link] # filter links to profiles
     links = list(set(links)) # remove any duplicates
     return links
 
-def next_page(): # goto next page in sales nav search
+def next_page(wait_load = 3): # goto next page in sales nav search
     btn =  driver.find_element_by_xpath("//button[@class='search-results__pagination-next-button']");
     if btn.is_enabled():
         btn.click()
-        time.sleep(3)
+        time.sleep(wait_load)
         return True
     else:
         return False
@@ -76,7 +75,7 @@ def get_all_links(links): # gets all links in a sales nav search (recursive! wow
         get_all_links(links)
 
 def nav_to_linkedin(profile_url): # opens nav profile and jumps to regular linkedin profile, returns linkedin profile URL
-    driver.get(profile_url)     # TODO: modify tags on sales nav profile
+    driver.get(profile_url)       # TODO: modify tags on sales nav profile
     dropdown_menu = driver.find_element_by_xpath("//artdeco-dropdown-trigger[@role='button' and @class='button-round-tertiary-medium-muted block ml1 ember-view']")
     dropdown_menu.click()
     time.sleep(1) # this shouldnt be a static wait
@@ -119,8 +118,9 @@ def focus_window(): # works on linux, not sure abt windows yet
 
 # print using chrome print dialogue
 # window must be focused for this to work
-# assumes you are using print to pdf
-def print_dialog(waitManualFocus = False):
+# assumes you are using print to pdf,
+# and already have it selected
+def print_dialog(wait_print_dialog = 2, wait_save_dialog = 4):
     # def focus_chrome_win
     # def focus_chrome_linux
 
@@ -136,13 +136,13 @@ def print_dialog(waitManualFocus = False):
     keyboard.press('p')
     keyboard.release(Key.ctrl_l)
     keyboard.release('p')
-    time.sleep(2) # wait for dialogue to open
+    time.sleep(wait_print_dialog) # wait for dialogue to open
     keyboard.press(Key.enter)
     keyboard.release(Key.enter)
-    time.sleep(5) # wait for download dialogue to open
+    time.sleep(wait_save_dialog) # wait for download dialogue to open
     keyboard.press(Key.enter)
     keyboard.release(Key.enter)
-    time.sleep(2)
+    time.sleep(1)
 
 
 def print_profiles(links):
