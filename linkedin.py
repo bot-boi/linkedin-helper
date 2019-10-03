@@ -27,7 +27,8 @@ def wait_user(): # waits for user to press enter
     input("Press Enter to continue...")
 
 def scroll_once():
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    # driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    driver.execute_script("window.scrollBy(0, 500);")
 
 def scroll_to_bottom():
     SCROLL_PAUSE_TIME = 1 #seconds
@@ -50,7 +51,7 @@ def open_sales_search():
 
 def get_links_on_page(wait_load = 1): # gets a list of links to sales nav profiles on a given page
     elems = []
-    for n in range(2):
+    for n in range(7):
        elems += driver.find_elements_by_xpath("//*[@href]")
        scroll_once()
        time.sleep(wait_load)
@@ -60,7 +61,7 @@ def get_links_on_page(wait_load = 1): # gets a list of links to sales nav profil
     links = list(set(links)) # remove any duplicates
     return links
 
-def next_page(wait_load = 3): # goto next page in sales nav search
+def next_page(wait_load = 1): # goto next page in sales nav search
     btn =  driver.find_element_by_xpath("//button[@class='search-results__pagination-next-button']");
     if btn.is_enabled():
         btn.click()
@@ -70,7 +71,7 @@ def next_page(wait_load = 3): # goto next page in sales nav search
         return False
 
 def get_all_links(links): # gets all links in a sales nav search (recursive! wow cool!)
-    links += get_links_on_page()
+    links += get_links_on_page(1)
     if next_page():
         get_all_links(links)
 
@@ -100,8 +101,11 @@ def hide_linkedin_search_bar():
     searchbar = driver.find_element_by_xpath("//header[@id='extended-nav']")
     hide_element(searchbar)
     # hide the bar that shows when you're scrolled down page a bit
-    otherbar = driver.find_element_by_xpath("//div[@class='pv-profile-sticky-header pv-profile-sticky-header--is-showing pv-profile-sticky-header--hidden ember-view']")
-    hide_element(otherbar)
+    try:
+        otherbar = driver.find_element_by_xpath("//div[@class='pv-profile-sticky-header pv-profile-sticky-header--is-showing pv-profile-sticky-header--hidden ember-view']")
+        hide_element(otherbar)
+    except:
+        print("otherbar not found")
 
 def expand_seemore_tags(): # expand all "see more" elements
     scroll_to_bottom() # force page to load
@@ -146,13 +150,10 @@ def print_dialog(wait_print_dialog = 2, wait_save_dialog = 4):
 
 
 def print_profiles(links):
-    waitManualFocus = True
     for link in links:
         if not driver.current_url == link:
             driver.get(link)
-        print_dialog(waitManualFocus)
-        if waitManualFocus: # first print needs manual focus until i automate it
-            waitManualFocus = False
+        print_dialog()
 
 def init():
     global driver

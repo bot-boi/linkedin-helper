@@ -1,3 +1,6 @@
 __pycache__
 constants.py
 *.py.swp
+profiles
+debug.log
+chromedriver_win32
